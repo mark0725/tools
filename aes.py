@@ -1,6 +1,7 @@
 #coding: utf8  
 #example: python aes.py keyskeyskeyskeys 0123456789ABCDEF
-import sys  
+import sys
+import optparse    
 from Crypto.Cipher import AES  
 from binascii import b2a_hex, a2b_hex  
    
@@ -16,7 +17,6 @@ class aestool():
         self.key = key  
         self.mode = AES.MODE_CBC  
        
-    #加密函数，如果text不是16的倍数【加密文本text必须为16的倍数！】，那就补足为16的倍数  
     def encrypt(self, text):  
         cryptor = AES.new(self.key, self.mode, self.key)  
         #这里密钥key 长度必须为16（AES-128）、24（AES-192）、或32（AES-256）Bytes 长度.目前AES-128足够用  
@@ -39,22 +39,33 @@ class aestool():
         plain_text = cryptor.decrypt(a2b_hex(text))  
         return plain_text.rstrip('\0')  
    
-def main(argv):
 
-    if len(argv) < 3 :
-        print 'Useage: ', argv[0], ' key data'
-        print '  key: length 16 bytes.'
-        sys.exit(1)
+if __name__ == '__main__':
+    parse = optparse.OptionParser(usage='"usage:%prog [options] key,data"\n\tkey max length 16 bytes.',version="%prog 0.1")  
+    parse.add_option('-e','--encrypt',dest='encrypt',action='store_true',metavar='encrypt', help='encrypt data')  
+    parse.add_option('-d','--decrypt',dest='decrypt',action='store_true',metavar='decrypt', help='decrypt data')  
+    parse.add_option('-v',help='aestool 0.1')  
+    parse.set_defaults(v=0.1)  
+    options,args=parse.parse_args()  
 
-    if len(argv[1]) > 16 :
+    print 'OPTIONS:',options  
+    print 'ARGS:',args  
+    
+    if len(args[0]) > 16 :
         print '  key max length 16 bytes.'
         sys.exit(1)
 
-    pc = aestool(argv[1])      #初始化密钥  
-    e = pc.encrypt(argv[2])  
-    d = pc.decrypt(e)                       
-    print 'plain text:', d
-    print 'encrypt text:', e
+    pc = aestool(args[0])      #初始化密钥  
 
-if __name__ == '__main__':
-    main(sys.argv) 
+    if options.decrypt:
+        print 'decrypt data'
+        e = args[1]
+        d = pc.decrypt(e) 
+        print 'encrypt text:', e
+        print 'plain text:', d
+    else:
+        print 'encrypt data'
+        e = pc.encrypt(args[1])  
+        d = pc.decrypt(e) 
+        print 'plain text:', d
+        print 'encrypt text:', e
