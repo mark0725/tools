@@ -48,8 +48,6 @@ if __name__ == '__main__':
     parse.set_defaults(v=0.1)  
     options,args=parse.parse_args()  
 
-    print 'OPTIONS:',options  
-    print 'ARGS:',args  
     
     if len(args[0]) > 16 :
         print '  key max length 16 bytes.'
