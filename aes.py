@@ -2,23 +2,41 @@
 #example: python aes.py keyskeyskeyskeys 0123456789ABCDEF
 import sys
 import optparse    
+import hashlib
 from Crypto.Cipher import AES  
 from binascii import b2a_hex, a2b_hex  
    
 class aestool():  
     def __init__(self, key):  
+        hash = hashlib.sha256()
+        hash.update(key.encode('utf-8'))
+        hash.update(hash.digest())
+        #print(hash.hexdigest())
+
+        h2 = hash.digest()
+        h21 = bytearray(16);
+        h22 = bytearray(16);
+
+        for i in range(0,16) :
+            h21[i] = h2[i]
+            h22[i] = h2[16+i]
+
+        #print b2a_hex(h21)  
+        #print b2a_hex(h22)  
+
         count = len(key) 
         if(count % 16 != 0) :  
             add = 16 - (count % 16)  
         else:  
             add = 0  
 
-        key = key + ('\0' * add)
-        self.key = key  
+        #key = key + ('\0' * add)
+        self.key = bytes(h21)  
+        self.iv = bytes(h22)
         self.mode = AES.MODE_CBC  
        
     def encrypt(self, text):  
-        cryptor = AES.new(self.key, self.mode, self.key)  
+        cryptor = AES.new(self.key, self.mode, self.iv)  
         #这里密钥key 长度必须为16（AES-128）、24（AES-192）、或32（AES-256）Bytes 长度.目前AES-128足够用  
         length = 16  
         count = len(text)  
@@ -35,7 +53,7 @@ class aestool():
        
     #解密后，去掉补足的空格用strip() 去掉  
     def decrypt(self, text):  
-        cryptor = AES.new(self.key, self.mode, self.key)  
+        cryptor = AES.new(self.key, self.mode, self.iv)  
         plain_text = cryptor.decrypt(a2b_hex(text))  
         return plain_text.rstrip('\0')  
    
@@ -48,12 +66,16 @@ if __name__ == '__main__':
     parse.set_defaults(v=0.1)  
     options,args=parse.parse_args()  
 
-    
+    if len(args) < 2 :
+        print "usage:aestool [options] key,data"
+        sys.exit(1)
+
     if len(args[0]) > 16 :
         print '  key max length 16 bytes.'
         sys.exit(1)
 
     pc = aestool(args[0])      #初始化密钥  
+
 
     if options.decrypt:
         print 'decrypt data'
